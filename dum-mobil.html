@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>Dum-mobil – SMS-konkurranse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dy:#ffb900; --y:#ffcd00; --bk:#000; --w:#fff;
+  --g1:#0d0d0d; --g2:#1c1c1e; --g3:#2c2c2e; --g4:#8e8e93; --bad:#ff6b5e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bk);color:var(--w);font-family:'Open Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+.app{height:100%;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+
+/* ---------- header (iMessage-style) ---------- */
+header{position:relative;padding:18px 24px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;border-bottom:1px solid #1f1f1f;background:linear-gradient(#000,#050505)}
+.round-btn{position:absolute;top:22px;width:52px;height:52px;border-radius:50%;background:var(--g2);display:grid;place-items:center;transition:background .15s}
+.round-btn:hover{background:var(--g3)}
+.round-btn svg{width:24px;height:24px;stroke:var(--w);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.round-btn.left{left:24px}.round-btn.right{right:24px}
+.group-av{width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--y),var(--dy));display:grid;place-items:center;font-size:40px;box-shadow:0 0 0 4px #000,0 0 30px rgba(255,205,0,.25)}
+.group-name{background:var(--g2);border-radius:999px;padding:7px 18px;font-weight:700;font-size:20px;display:flex;align-items:center;gap:6px}
+.group-name span.chev{color:var(--g4);font-weight:400}
+.sub{color:var(--g4);font-size:13px;text-align:center;line-height:1.35}
+
+/* ---------- target sentence + scoreboard ---------- */
+.target{margin:16px 24px 0;padding:14px 20px 16px;border-radius:18px;background:var(--g1);border:1px solid #222;display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 16px}
+.target .lbl{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--y);text-transform:uppercase;white-space:nowrap}
+.target .txt{grid-column:1/-1;grid-row:2;font-size:24px;font-weight:600;line-height:1.3}
+.timer:empty{display:none}
+.timer{grid-column:2;grid-row:1;font-variant-numeric:tabular-nums;font-weight:800;font-size:30px;color:var(--y);min-width:120px;text-align:right}
+.players{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 24px 0}
+.pl{background:var(--g1);border:1px solid #222;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:10px;min-width:0;transition:all .3s}
+.pl .nm{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl .st{font-size:12px;color:var(--g4)}
+.pl.winner{background:var(--y);border-color:var(--y);color:#000}
+.pl.winner .st{color:#000;font-weight:700}
+.pl.ok{border-color:var(--dy)}
+.av{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px}
+.c0{background:var(--y);color:#000}.c1{background:var(--dy);color:#000}.c2{background:#fff;color:#000}.c3{background:#3a3a3c;color:#fff;box-shadow:inset 0 0 0 2px var(--y)}
+.cx{background:#3a3a3c;color:var(--g4)}
+.av.ph{background-size:cover;background-position:center;color:transparent;box-shadow:0 0 0 2px var(--y)}
+.pl .av{width:48px;height:48px;font-size:18px}
+.msg .av{width:44px;height:44px}
+.photo-btn{width:52px;height:52px;border-radius:50%;border:2px dashed #444;display:grid;place-items:center;font-size:12px;color:var(--g4);cursor:pointer;background-size:cover;background-position:center;overflow:hidden;flex:none}
+.photo-btn.has{border:2px solid var(--y);color:transparent}
+.photo-btn input{display:none}
+
+/* ---------- chat ---------- */
+.chat{flex:1;overflow-y:auto;padding:18px 24px 24px;display:flex;flex-direction:column;gap:4px;scroll-behavior:smooth}
+.empty{margin:auto;text-align:center;color:var(--g4);max-width:440px;line-height:1.5}
+.empty b{color:var(--w)}
+.sys{align-self:center;color:var(--g4);font-size:13px;margin:12px 0 6px;text-align:center}
+.sys b{color:var(--w);font-weight:600}
+.msg{display:flex;align-items:flex-end;gap:10px;max-width:88%;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.85) translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.msg .who{font-size:13px;color:var(--g4);margin:10px 0 3px 16px}
+.bubble{background:var(--g3);color:var(--w);padding:12px 18px;border-radius:22px;font-size:24px;line-height:1.35;position:relative;word-wrap:break-word;overflow-wrap:anywhere}
+.bubble::before{content:"";position:absolute;left:-6px;bottom:0;width:18px;height:18px;background:inherit;border-bottom-right-radius:14px;clip-path:polygon(0 100%,100% 0,100% 100%)}
+.meta{font-size:12px;color:var(--g4);margin:4px 0 0 16px;display:flex;gap:10px;align-items:center}
+.tag{font-weight:700;letter-spacing:.02em}
+.tag.ok{color:var(--y)}.tag.bad{color:var(--bad)}.tag.pre{color:var(--g4)}
+.msg.ok .bubble{box-shadow:inset 0 0 0 2px var(--dy)}
+.msg.win .bubble{background:var(--y);color:#000;font-weight:600;box-shadow:0 0 0 3px rgba(255,205,0,.25),0 0 40px rgba(255,205,0,.35)}
+.msg .av{margin-bottom:22px}
+
+/* ---------- bottom bar ---------- */
+footer{display:flex;align-items:center;gap:12px;padding:12px 24px 16px;border-top:1px solid #1f1f1f}
+.conn{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--g4);flex:1;min-width:0}
+.dot{width:10px;height:10px;border-radius:50%;background:#555;flex:none}
+.dot.on{background:#30d158;box-shadow:0 0 8px #30d158}.dot.err{background:var(--bad)}
+.btn{background:var(--g2);border-radius:999px;padding:12px 22px;font-weight:700;font-size:16px;transition:transform .1s,background .15s;white-space:nowrap}
+.btn:hover{background:var(--g3)}.btn:active{transform:scale(.96)}
+.btn.primary{background:var(--y);color:#000}.btn.primary:hover{background:var(--dy)}
+.btn.small{padding:8px 14px;font-size:14px}
+.btn:disabled{opacity:.4;pointer-events:none}
+
+/* ---------- overlays ---------- */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;z-index:50;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px}
+.overlay.show{display:flex}
+#countdown .n{font-size:220px;font-weight:800;color:var(--y);line-height:1;animation:cd .9s ease-out}
+@keyframes cd{from{transform:scale(1.6);opacity:0}to{transform:scale(1);opacity:1}}
+#winner .trophy{font-size:120px;animation:pop .6s cubic-bezier(.2,1.6,.4,1)}
+#winner .wphoto{width:260px;height:260px;border-radius:50%;background-size:cover;background-position:center;box-shadow:0 0 0 6px var(--y),0 0 80px rgba(255,205,0,.5);margin-bottom:10px;animation:pop .6s cubic-bezier(.2,1.6,.4,1);display:none}
+#winner h1{font-size:64px;font-weight:800;color:var(--y);margin:10px 0 6px;line-height:1.05}
+#winner .t{font-size:30px;font-weight:600}
+#winner .s{font-size:24px;color:var(--g4);margin-top:22px;max-width:900px}
+#winner .hint{position:absolute;bottom:30px;color:var(--g4);font-size:14px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+#unlock{background:#000;z-index:70}
+#unlock .big{width:120px;height:120px;border-radius:50%;background:var(--y);display:grid;place-items:center;font-size:56px;margin-bottom:26px;box-shadow:0 0 60px rgba(255,205,0,.4)}
+#unlock h2{font-size:34px;font-weight:800}
+#unlock p{color:var(--g4);margin-top:10px;font-size:17px}
+
+/* ---------- settings panel ---------- */
+.panel{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.6);display:none;justify-content:flex-end}
+.panel.show{display:flex}
+.sheet{width:min(560px,100%);height:100%;background:#0b0b0b;border-left:1px solid #222;overflow-y:auto;padding:28px 28px 60px}
+.sheet h2{font-size:26px;font-weight:800;margin-bottom:4px}
+.sheet h3{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--y);margin:28px 0 10px}
+.sheet p,.sheet li{color:#bbb;font-size:14px;line-height:1.55}
+.sheet ol{padding-left:20px}.sheet li{margin-bottom:6px}
+.sheet code{background:var(--g2);padding:2px 6px;border-radius:6px;font-size:13px;color:var(--y);word-break:break-all}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field label{font-size:13px;color:var(--g4);font-weight:600}
+input[type=text],input[type=tel],textarea{background:var(--g2);border:1px solid #2a2a2a;border-radius:12px;padding:11px 14px;font-size:16px;outline:none;width:100%}
+input:focus,textarea:focus{border-color:var(--y)}
+textarea{resize:vertical;min-height:70px}
+.prow{display:grid;grid-template-columns:52px 1fr 1fr;gap:10px;align-items:center;margin-bottom:12px}
+.chk{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:15px;color:#ddd}
+.chk input{width:22px;height:22px;accent-color:var(--y)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.testgrid{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+.testgrid .nm{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.note{font-size:13px;color:var(--g4);margin-top:6px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--y);color:#000;font-weight:700;padding:10px 20px;border-radius:999px;opacity:0;transition:all .25s;z-index:90;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+/* stående format er hovedoppsettet; mindre skjermer skaleres ned */
+@media (max-width:700px){
+  .target .txt{font-size:19px}.bubble{font-size:19px}
+  #winner h1{font-size:42px}#countdown .n{font-size:150px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <button class="round-btn left" id="btnFull" title="Fullskjerm">
+      <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+    <div class="group-av">📱</div>
+    <div class="group-name"><span id="groupTitle">Dum-mobil</span><span class="chev">›</span></div>
+    <div class="sub" id="subline">SMS · 4 deltagere</div>
+    <button class="round-btn right" id="btnSettings" title="Innstillinger">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <div class="target">
+    <div class="lbl">Setning</div>
+    <div class="txt" id="targetTxt">–</div>
+    <div class="timer" id="timer"></div>
+  </div>
+
+  <div class="chat" id="chat"></div>
+
+  <footer>
+    <div class="conn"><span class="dot" id="dot"></span><span id="connTxt">Ikke tilkoblet</span><span id="hiddenTxt" style="margin-left:10px;opacity:.7"></span></div>
+    <button class="btn" id="btnStart">Nedtelling</button>
+    <button class="btn primary" id="btnReset">Nullstill (mellomrom)</button>
+  </footer>
+</div>
+
+<!-- tap to unlock sound (iPad requires a tap before audio can play) -->
+<div class="overlay show" id="unlock">
+  <div class="big">🔔</div>
+  <h2>Trykk for å starte</h2>
+  <p>Slår på lyd og holder skjermen våken</p>
+</div>
+
+<div class="overlay" id="countdown"><div class="n" id="cdN">3</div></div>
+
+<div class="overlay" id="winner">
+  <div class="wphoto" id="wPhoto"></div><div class="trophy" id="wTrophy">🏆</div>
+  <h1 id="wName">Navn</h1>
+  <div class="t" id="wTime">0:00,0</div>
+  <div class="s" id="wText"></div>
+  <div class="hint">Trykk <b style="color:#fff">mellomrom</b> (eller på skjermen) for ny runde</div>
+</div>
+<canvas id="confetti"></canvas>
+
+<div class="panel" id="panel">
+  <div class="sheet">
+    <div class="row" style="justify-content:space-between">
+      <h2>Innstillinger</h2>
+      <button class="btn small primary" id="btnClose">Ferdig</button>
+    </div>
+
+    <h3>Konkurranse</h3>
+    <div class="field"><label>Navn på gruppechatten</label><input type="text" id="fTitle"></div>
+    <div class="field"><label>Setningen som skal skrives</label><textarea id="fSentence"></textarea></div>
+    <label class="chk"><input type="checkbox" id="fSound"> Pling-lyd ved ny melding</label>
+    <p class="note">Meldingen må være helt lik setningen – store/små bokstaver, tegnsetting og mellomrom teller.</p>
+
+    <h3>Deltagere</h3>
+    <div id="pEdit"></div>
+    <p class="note">Trykk på sirkelen for å velge bilde (beskjæres automatisk til et kvadrat). Telefonnummer kan skrives med eller uten +47 og mellomrom – de siste 8 sifrene brukes til å kjenne igjen avsender.</p>
+
+    <h3>SMS-kobling</h3>
+    <div class="field"><label>Kanal (ntfy-emne – hold det hemmelig)</label>
+      <div class="row"><input type="text" id="fTopic" style="flex:1"><button class="btn small" id="btnNewTopic">Ny</button></div>
+    </div>
+    <div class="field"><label>ntfy-server</label><input type="text" id="fServer"></div>
+    <p>Innkommende SMS må videresendes (HTTP POST) til denne adressen:</p>
+    <p style="margin:8px 0"><code id="postUrl"></code> <button class="btn small" id="btnCopy" style="margin-left:6px">Kopier</button></p>
+    <p><b style="color:#fff">Alternativ A – en Android-telefon med SIM</b> (gratis, enklest):</p>
+    <ol>
+      <li>Sett et SIM-kort i en Android-telefon. Det nummeret er «mottakernummeret» deltagerne sender til.</li>
+      <li>Installer en SMS-videresendingsapp, f.eks. <i>SMS to URL Forwarder</i> (Google Play / F-Droid).</li>
+      <li>Lim inn adressen over som URL. Standardmalen (JSON med <code>from</code> og <code>text</code>) fungerer.</li>
+    </ol>
+    <p style="margin-top:10px"><b style="color:#fff">Alternativ B – virtuelt nummer</b> (46elks, Twilio o.l.): sett nummerets «innkommende SMS»-webhook til adressen over.</p>
+
+    <h3>Test</h3>
+    <p style="margin-bottom:10px">«Lokalt» viser en falsk melding bare på denne skjermen. «Via ntfy» sender gjennom samme kanal som ekte SMS – bra for å sjekke at tilkoblingen virker.</p>
+    <div class="testgrid" id="testGrid"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn small" id="btnWrong">Simuler feil svar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+
+/* ---------------- config ---------------- */
+const rnd = () => Math.random().toString(36).slice(2, 8);
+const DEFAULT = {
+  title: 'Dum-mobil',
+  sentence: 'Jeg digger håndballjentene!',   // ← plassholder: byttes i innstillingene (tannhjulet)
+  sound: true,
+  topic: 'dummobil-' + rnd() + rnd(),
+  server: 'https://ntfy.sh',
+  players: [
+    { name: 'Henny Reistad', phone: '' }, { name: 'Thale Deila', phone: '' },
+    { name: 'Tobias Grøndahl', phone: '' }, { name: 'August Pedersen', phone: '' }
+  ]
+};
+let cfg;
+try { cfg = Object.assign({}, DEFAULT, JSON.parse(localStorage.getItem('dummobil-cfg') || '{}')); }
+catch { cfg = Object.assign({}, DEFAULT); }
+if (['Ice er Norges mest innovative mobiloperatør!', 'Heia Norge!'].includes(cfg.sentence)) cfg.sentence = DEFAULT.sentence;
+// bytt ut gamle standardnavn hvis de fortsatt står der
+(cfg.players || []).forEach((p, i) => { if (/^Deltager \d$/.test(p.name || '')) p.name = DEFAULT.players[i].name; });
+const save = () => { try { localStorage.setItem('dummobil-cfg', JSON.stringify(cfg)); } catch {} };
+save();
+
+/* ---------------- state ---------------- */
+let roundStart = null;      // ms timestamp, null = not started
+let winner = null;          // {idx, ms, text}
+let seen = new Set();
+let attempts = [0, 0, 0, 0];
+let firstOk = [null, null, null, null];
+let timerRAF = null;
+let hiddenCount = 0;
+
+/* ---------------- helpers ---------------- */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const digits = s => String(s || '').replace(/\D/g, '');
+const key8 = s => digits(s).slice(-8);
+const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+const fmt = ms => { if (ms < 0) ms = 0; const m = Math.floor(ms / 60000), s = Math.floor(ms / 1000) % 60, t = Math.floor(ms / 100) % 10; return `${m}:${String(s).padStart(2, '0')},${t}`; };
+const clock = d => d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+// Streng sjekk: store/små bokstaver, tegnsetting og mellomrom må være helt likt.
+// Kun usynlige mellomrom/linjeskift helt først eller sist fjernes.
+function norm(s) {
+  return String(s || '').normalize('NFC').replace(/^\s+|\s+$/g, '');
+}
+function playerIdx(from) {
+  const k = key8(from); if (!k) return -1;
+  return cfg.players.findIndex(p => key8(p.phone) && key8(p.phone) === k);
+}
+function avatar(i, extra = '') {
+  const p = cfg.players[i];
+  if (p && p.photo) return `<div class="av ph ${extra}" style="background-image:url('${p.photo}')"></div>`;
+  return `<div class="av c${i} ${extra}">${esc(initials(p ? p.name : '?'))}</div>`;
+}
+function resizeImage(file) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const S = 320, c = document.createElement('canvas'); c.width = c.height = S;
+      const m = Math.min(img.width, img.height), sx = (img.width - m) / 2, sy = (img.height - m) / 2.6;
+      c.getContext('2d').drawImage(img, sx, Math.max(0, sy), m, m, 0, 0, S, S);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .85));
+    };
+    img.onerror = rej; img.src = url;
+  });
+}
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 1800); }
+
+/* ---------------- audio ---------------- */
+let ac = null;
+function audio() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch {} } if (ac && ac.state === 'suspended') ac.resume(); return ac; }
+function tone(f, t0, dur, vol = .25, type = 'sine') {
+  const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.value = f;
+  g.gain.setValueAtTime(0, a.currentTime + t0);
+  g.gain.linearRampToValueAtTime(vol, a.currentTime + t0 + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + t0 + dur);
+  o.connect(g).connect(a.destination); o.start(a.currentTime + t0); o.stop(a.currentTime + t0 + dur + .05);
+}
+const pling = () => { if (!cfg.sound) return; tone(1318.5, 0, .35); tone(1760, .09, .5); };
+const beep = hi => tone(hi ? 1046.5 : 523.25, 0, hi ? .6 : .25, .3, 'triangle');
+const fanfare = () => { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, i * .12, .5, .25, 'triangle')); tone(1318.5, .5, 1.1, .2); };
+
+/* ---------------- wake lock ---------------- */
+let wl = null;
+async function keepAwake() { try { if ('wakeLock' in navigator) { wl = await navigator.wakeLock.request('screen'); } } catch {} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !document.querySelector('#unlock.show')) keepAwake(); });
+
+/* ---------------- render ---------------- */
+function renderHeader() {
+  $('#groupTitle').textContent = cfg.title || 'Dum-mobil';
+  $('#targetTxt').textContent = cfg.sentence || '–';
+  $('#subline').textContent = 'SMS · ' + cfg.players.map(p => p.name).join(', ');
+  document.title = (cfg.title || 'Dum-mobil') + ' – SMS-konkurranse';
+}
+function renderPlayers() {
+  if (!$('#players')) return;   // poengtavla er fjernet
+  $('#players').innerHTML = cfg.players.map((p, i) => {
+    let st = 'Venter …', cls = '';
+    if (winner && winner.idx === i) { st = '🏆 Vinner · ' + fmt(winner.ms); cls = 'winner'; }
+    else if (firstOk[i] != null) { st = '✓ Riktig · ' + fmt(firstOk[i]); cls = 'ok'; }
+    else if (attempts[i]) st = attempts[i] + (attempts[i] === 1 ? ' forsøk' : ' forsøk') + ' – feil';
+    return `<div class="pl ${cls}">${avatar(i)}<div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="st">${st}</div></div></div>`;
+  }).join('');
+}
+function emptyState() {
+  $('#chat').innerHTML = `<div class="empty" id="empty">Meldinger fra de fire Nokia-telefonene dukker opp her som en gruppechat.<br><br>Siden er klar – første riktige SMS vinner.<br>Trykk <b>mellomrom</b> for å nullstille.</div>`;
+}
+function sys(html) {
+  const e = $('#empty'); if (e) e.remove();
+  const d = document.createElement('div'); d.className = 'sys'; d.innerHTML = html; $('#chat').appendChild(d); scroll();
+}
+function scroll() { const c = $('#chat'); requestAnimationFrame(() => c.scrollTop = c.scrollHeight); }
+
+/* ---------------- incoming ---------------- */
+function parseIncoming(raw) {
+  // Accepts JSON ({from,text} / {from,message} / ...), form-encoded (from=..&message=..) or "number: text"
+  let from = '', text = '';
+  const s = String(raw || '').trim();
+  try {
+    const j = JSON.parse(s);
+    if (j && typeof j === 'object') {
+      from = j.from || j.From || j.sender || j.number || j.phone || j.msisdn || '';
+      text = j.text ?? j.message ?? j.body ?? j.Body ?? j.msg ?? j.content ?? '';
+      return { from: String(from), text: String(text) };
+    }
+  } catch {}
+  if (/(^|&)(from|From)=/.test(s)) {
+    const p = new URLSearchParams(s);
+    return { from: p.get('from') || p.get('From') || '', text: p.get('message') || p.get('text') || p.get('Body') || p.get('body') || '' };
+  }
+  const m = s.match(/^\s*(\+?[\d\s]{6,})\s*[:\-–]\s*([\s\S]*)$/);
+  if (m) return { from: m[1], text: m[2] };
+  return { from: '', text: s };
+}
+
+function addMessage(from, text, id) {
+  if (id) { if (seen.has(id)) return; seen.add(id); }
+  const now = performance.now();
+  const idx = playerIdx(from);
+  if (idx < 0) {            // ukjent nummer: vises ikke, telles bare diskret i bunnlinjen
+    hiddenCount++;
+    const h = $('#hiddenTxt'); h.textContent = `${hiddenCount} skjult (ukjent nr.)`; h.title = 'Siste: ' + (from || 'uten nummer');
+    return;
+  }
+  const p = idx >= 0 ? cfg.players[idx] : { name: from ? from : 'Ukjent avsender' };
+  const started = roundStart != null;      // bare for tidtaking – meldinger teller alltid
+  const ms = started ? now - roundStart : null;
+  const correct = norm(text) === norm(cfg.sentence);
+
+  let state = 'bad', tag = '';
+  {
+    if (idx < 0) { state = 'unk'; tag = '<span class="tag pre">Ukjent nummer – teller ikke</span>'; }
+    else {
+      attempts[idx]++;
+      if (correct) {
+        if (firstOk[idx] == null) firstOk[idx] = ms;
+        if (!winner) { winner = { idx, ms, text }; state = 'win'; tag = '<span class="tag ok">🏆 FØRST MED RIKTIG!</span>'; }
+        else { state = 'ok'; tag = '<span class="tag ok">✓ Riktig</span>'; }
+      } else { state = 'bad'; tag = '<span class="tag bad">✗ Feil</span>'; }
+    }
+  }
+
+  const e = $('#empty'); if (e) e.remove();
+  const wrap = document.createElement('div');
+  wrap.className = 'msg ' + state;
+  const time = ms != null ? `+${fmt(ms)}` : clock(new Date());
+  wrap.innerHTML = `${idx >= 0 ? avatar(idx) : '<div class="av cx">?</div>'}
+    <div style="min-width:0"><div class="who">${esc(p.name)}</div><div class="bubble">${esc(text) || '<i style="opacity:.5">(tom melding)</i>'}</div>
+    <div class="meta"><span>${time}</span>${tag}</div></div>`;
+  $('#chat').appendChild(wrap);
+  scroll();
+  pling();
+  renderPlayers();
+
+  if (state === 'win') {
+    if (winner.ms != null) stopTimer(winner.ms);
+    setTimeout(() => showWinner(), 700);
+  }
+}
+
+/* ---------------- round control ---------------- */
+function tick() { if (roundStart == null || winner) return; $('#timer').textContent = fmt(performance.now() - roundStart); timerRAF = requestAnimationFrame(tick); }
+function stopTimer(ms) { cancelAnimationFrame(timerRAF); $('#timer').textContent = fmt(ms); }
+
+function resetRound(silent) {
+  roundStart = null; winner = null; attempts = [0, 0, 0, 0]; firstOk = [null, null, null, null];
+  hiddenCount = 0; $('#hiddenTxt').textContent = ''; confettiRun++;
+  $('#winner').classList.remove('show'); $('#countdown').classList.remove('show');
+  cancelAnimationFrame(timerRAF); $('#timer').textContent = '';
+  $('#btnStart').disabled = false; $('#btnStart').textContent = 'Nedtelling';
+  emptyState(); renderPlayers();
+  if (!silent) toast('Nullstilt – klar for ny runde');
+}
+function startRound() {
+  if (roundStart != null || winner) return;
+  audio();
+  $('#btnStart').disabled = true;
+  const ov = $('#countdown'), n = $('#cdN');
+  let c = 3; ov.classList.add('show');
+  const step = () => {
+    if (c > 0) { n.textContent = c; n.style.animation = 'none'; n.offsetHeight; n.style.animation = ''; beep(false); c--; setTimeout(step, 1000); }
+    else {
+      n.textContent = 'SKRIV!'; n.style.fontSize = '160px'; n.style.animation = 'none'; n.offsetHeight; n.style.animation = ''; beep(true);
+      roundStart = performance.now();
+      $('#btnStart').textContent = 'Klokka går …';
+      sys(`Runden startet <b>${clock(new Date())}</b>`);
+      tick();
+      setTimeout(() => { ov.classList.remove('show'); n.style.fontSize = ''; }, 700);
+    }
+  };
+  step();
+}
+
+/* ---------------- winner + confetti ---------------- */
+function showWinner() {
+  const p = cfg.players[winner.idx];
+  $('#wName').textContent = '🏆 ' + p.name + ' vant!';
+  $('#wPhoto').style.display = p.photo ? 'block' : 'none';
+  if (p.photo) $('#wPhoto').style.backgroundImage = `url('${p.photo}')`;
+  $('#wTrophy').style.display = p.photo ? 'none' : 'block';
+  if (!p.photo) $('#wName').textContent = p.name + ' vant!';
+  $('#wTime').textContent = winner.ms != null ? 'Tid: ' + fmt(winner.ms) : '';
+  $('#wText').textContent = '«' + winner.text + '»';
+  $('#winner').classList.add('show');
+  $('#btnStart').disabled = true;
+  sys(`<b>${esc(p.name)}</b> vant${winner.ms != null ? ' på ' + fmt(winner.ms) : ''}`);
+  fanfare(); confetti();
+}
+$('#winner').addEventListener('click', () => resetRound(false));
+
+// Mellomrom = nullstill konkurransen (ikke mens man skriver i innstillingene)
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space' && e.key !== ' ') return;
+  const t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+  if ($('#panel').classList.contains('show')) return;
+  e.preventDefault();
+  if ($('#unlock').classList.contains('show')) { $('#unlock').click(); return; }
+  resetRound(false);
+});
+
+let confettiRun = 0;
+function confetti() {
+  const run = ++confettiRun;
+  const cv = $('#confetti'), cx = cv.getContext('2d');
+  const W = cv.width = innerWidth * devicePixelRatio, H = cv.height = innerHeight * devicePixelRatio;
+  cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
+  const cols = ['#ffcd00', '#ffb900', '#ffffff', '#ffe066'];
+  const parts = Array.from({ length: 220 }, () => ({
+    x: Math.random() * W, y: -Math.random() * H * .6, w: (6 + Math.random() * 8) * devicePixelRatio, h: (10 + Math.random() * 10) * devicePixelRatio,
+    vx: (Math.random() - .5) * 4, vy: (3 + Math.random() * 5) * devicePixelRatio, r: Math.random() * 6, vr: (Math.random() - .5) * .3, c: cols[Math.floor(Math.random() * cols.length)]
+  }));
+  const t0 = performance.now();
+  (function f(t) {
+    cx.clearRect(0, 0, W, H);
+    parts.forEach(p => { p.x += p.vx; p.y += p.vy; p.r += p.vr; cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r); cx.fillStyle = p.c; cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); cx.restore(); });
+    if (run === confettiRun && t - t0 < 5000) requestAnimationFrame(f); else cx.clearRect(0, 0, W, H);
+  })(t0);
+}
+
+/* ---------------- ntfy connection ---------------- */
+let es = null, lastId = null, retry = null;
+function setConn(state, txt) {
+  const d = $('#dot'); d.className = 'dot' + (state === 'on' ? ' on' : state === 'err' ? ' err' : '');
+  $('#connTxt').textContent = txt;
+}
+function connect() {
+  clearTimeout(retry);
+  if (es) { es.close(); es = null; }
+  if (!cfg.topic) { setConn('err', 'Ingen kanal valgt – åpne innstillinger'); return; }
+  const base = (cfg.server || 'https://ntfy.sh').replace(/\/+$/, '');
+  let url = `${base}/${encodeURIComponent(cfg.topic)}/sse`;
+  if (lastId) url += `?since=${encodeURIComponent(lastId)}`;
+  setConn('', 'Kobler til …');
+  try { es = new EventSource(url); } catch { setConn('err', 'Kunne ikke koble til'); return; }
+  es.addEventListener('open', () => setConn('on', 'Tilkoblet – venter på SMS'));
+  es.onmessage = ev => {
+    let d; try { d = JSON.parse(ev.data); } catch { return; }
+    if (d.event && d.event !== 'message') return;
+    lastId = d.id;
+    const { from, text } = parseIncoming(d.message);
+    addMessage(from, text, d.id);
+  };
+  es.onerror = () => { setConn('err', 'Mistet forbindelsen – prøver igjen …'); es.close(); es = null; retry = setTimeout(connect, 2500); };
+}
+
+/* ---------------- settings panel ---------------- */
+function postUrl() { return (cfg.server || 'https://ntfy.sh').replace(/\/+$/, '') + '/' + cfg.topic; }
+function fillSettings() {
+  $('#fTitle').value = cfg.title; $('#fSentence').value = cfg.sentence;
+  $('#fSound').checked = cfg.sound;
+  $('#fTopic').value = cfg.topic; $('#fServer').value = cfg.server;
+  $('#postUrl').textContent = postUrl();
+  $('#pEdit').innerHTML = cfg.players.map((p, i) => `<div class="prow"><label class="photo-btn ${p.photo ? 'has' : ''}" title="Velg bilde" ${p.photo ? `style="background-image:url('${p.photo}')"` : ''}>Bilde<input type="file" accept="image/*" data-photo="${i}"></label>
+    <input type="text" data-i="${i}" data-k="name" value="${esc(p.name)}" placeholder="Navn">
+    <input type="tel" data-i="${i}" data-k="phone" value="${esc(p.phone)}" placeholder="Telefonnr."></div>`).join('');
+  $('#testGrid').innerHTML = cfg.players.map((p, i) => `<div class="nm">${esc(p.name)}</div>
+    <button class="btn small" data-local="${i}">Lokalt</button><button class="btn small" data-remote="${i}">Via ntfy</button>`).join('');
+}
+function readSettings() {
+  const oldTopic = cfg.topic, oldServer = cfg.server;
+  cfg.title = $('#fTitle').value.trim() || 'Dum-mobil';
+  cfg.sentence = $('#fSentence').value.trim();
+  cfg.sound = $('#fSound').checked;
+  cfg.topic = $('#fTopic').value.trim().replace(/[^\w\-]/g, '');
+  cfg.server = $('#fServer').value.trim() || 'https://ntfy.sh';
+  document.querySelectorAll('#pEdit input[data-k]').forEach(inp => { cfg.players[+inp.dataset.i][inp.dataset.k] = inp.value.trim(); });
+  save(); renderHeader(); renderPlayers();
+  $('#postUrl').textContent = postUrl();
+  if (cfg.topic !== oldTopic || cfg.server !== oldServer) { lastId = null; connect(); }
+}
+$('#btnSettings').onclick = () => { fillSettings(); $('#panel').classList.add('show'); };
+$('#btnClose').onclick = () => { readSettings(); $('#panel').classList.remove('show'); };
+$('#panel').addEventListener('click', e => { if (e.target.id === 'panel') { readSettings(); $('#panel').classList.remove('show'); } });
+$('#panel').addEventListener('change', async e => {
+  const f = e.target.dataset && e.target.dataset.photo;
+  if (f != null && e.target.files && e.target.files[0]) {
+    readSettings();
+    try { cfg.players[+f].photo = await resizeImage(e.target.files[0]); save(); fillSettings(); renderPlayers(); toast('Bilde lagt inn'); }
+    catch { toast('Kunne ikke lese bildet'); }
+    return;
+  }
+  readSettings();
+});
+$('#btnNewTopic').onclick = () => { $('#fTopic').value = 'dummobil-' + rnd() + rnd(); readSettings(); toast('Ny kanal laget – husk å oppdatere videresendingen'); };
+$('#btnCopy').onclick = async () => {
+  try { await navigator.clipboard.writeText(postUrl()); toast('Kopiert!'); }
+  catch { const r = document.createRange(); r.selectNodeContents($('#postUrl')); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Marker og kopier manuelt'); }
+};
+$('#testGrid').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  readSettings();
+  const i = +(b.dataset.local ?? b.dataset.remote);
+  const p = cfg.players[i];
+  const from = p.phone || ('+47 9000000' + i);
+  if (!p.phone) toast('Tips: legg inn telefonnummer for ' + p.name);
+  if (b.dataset.local != null) {
+    if (!p.phone) { p.phone = from; save(); fillSettings(); }
+    addMessage(from, cfg.sentence, 'local-' + Date.now() + i);
+  } else {
+    try {
+      const r = await fetch(postUrl(), { method: 'POST', body: JSON.stringify({ from, text: cfg.sentence }) });
+      toast(r.ok ? 'Sendt via ntfy – se om den dukker opp' : 'ntfy svarte ' + r.status);
+    } catch { toast('Kunne ikke nå ntfy'); }
+  }
+});
+$('#btnWrong').onclick = () => {
+  readSettings();
+  const i = Math.floor(Math.random() * 4), p = cfg.players[i];
+  const s = cfg.sentence; const pos = Math.max(1, Math.floor(s.length / 2));
+  addMessage(p.phone || '+47 9000000' + i, s.slice(0, pos) + s.slice(pos + 1), 'local-w-' + Date.now());
+};
+
+/* ---------------- buttons ---------------- */
+$('#btnStart').onclick = startRound;
+$('#btnReset').onclick = () => resetRound(false);
+$('#btnFull').onclick = () => {
+  const d = document.documentElement;
+  try {
+    if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else (d.requestFullscreen || d.webkitRequestFullscreen).call(d);
+  } catch { toast('Tips: «Del» → «Legg til på Hjem-skjerm» for fullskjerm'); }
+};
+$('#unlock').onclick = () => { audio(); tone(1760, 0, .05, .001); keepAwake(); $('#unlock').classList.remove('show'); };
+
+/* ---------------- boot ---------------- */
+renderHeader(); renderPlayers(); emptyState(); connect();
+})();
+</script>
+</body>
+</html>
