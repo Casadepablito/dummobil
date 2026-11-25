@@ -23,7 +23,7 @@ button{cursor:pointer;border:0;background:none}
 
 /* ---------- header (iMessage-style) ---------- */
 header{position:relative;padding:18px 24px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;border-bottom:1px solid #1f1f1f;background:linear-gradient(#000,#050505)}
-.round-btn{position:absolute;top:22px;width:52px;height:52px;border-radius:50%;background:var(--g2);display:grid;place-items:center;transition:background .15s}
+.round-btn{flex:none;width:48px;height:48px;border-radius:50%;background:var(--g2);display:grid;place-items:center;transition:background .15s}
 .round-btn:hover{background:var(--g3)}
 .round-btn svg{width:24px;height:24px;stroke:var(--w);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .round-btn.left{left:24px}.round-btn.right{right:24px}
@@ -33,13 +33,16 @@ header{position:relative;padding:18px 24px 14px;display:flex;flex-direction:colu
 .sub{color:var(--g4);font-size:13px;text-align:center;line-height:1.35}
 
 /* ---------- target sentence + scoreboard ---------- */
-.target{margin:16px 24px 0;padding:14px 20px 16px;border-radius:18px;background:var(--g1);border:1px solid #222;display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 16px}
+.target{margin:clamp(40px,7vh,110px) 20px 0;padding:14px 20px 16px;border-radius:18px;background:var(--g1);border:1px solid #222;display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 16px}
 .target .lbl{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--y);text-transform:uppercase;white-space:nowrap}
-.target .lbl{font-size:22px;letter-spacing:0;text-transform:none;color:var(--w);font-weight:700}
-.target .txt{grid-column:1/-1;grid-row:2;font-size:40px;font-weight:800;line-height:1.15;color:var(--y)}
-.target .to{grid-column:1/-1;grid-row:3;font-size:22px;font-weight:600;color:var(--w)}
+.target .lbl{grid-column:1/-1;grid-row:1;font-size:clamp(26px,4.4vw,46px);letter-spacing:0;text-transform:none;color:var(--w);font-weight:700;line-height:1.2}
+.target .txt{grid-column:1/-1;grid-row:2;white-space:nowrap;overflow:hidden;min-width:0;font-size:clamp(40px,7vw,80px);font-weight:800;line-height:1.1;color:var(--y);margin:4px 0;letter-spacing:-.01em}
+.target .to{grid-column:1/-1;grid-row:3;font-size:clamp(24px,4vw,42px);font-weight:600;color:var(--w);line-height:1.25}
+.target{text-align:center}
+.target .timer{position:absolute;top:14px;right:20px}
+.target{position:relative}
 .target .to b{color:var(--y);font-weight:800}
-.target{padding:20px 24px 22px !important}
+.target{padding:22px 16px 24px !important}
 .timer:empty{display:none}
 .timer{grid-column:2;grid-row:1;font-variant-numeric:tabular-nums;font-weight:800;font-size:30px;color:var(--y);min-width:120px;text-align:right}
 .players{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 24px 0}
@@ -140,21 +143,42 @@ textarea{resize:vertical;min-height:70px}
   .target .txt{font-size:19px}.bubble{font-size:19px}
   #winner h1{font-size:42px}#countdown .n{font-size:150px}
 }
+
+/* ---- større meldinger ---- */
+.chat{gap:10px;padding:24px 28px 28px}
+.msg{max-width:94%;gap:14px}
+.msg .who{font-size:22px;font-weight:600;margin:14px 0 6px 22px}
+.bubble{font-size:clamp(30px,5vw,48px);padding:16px 28px;border-radius:34px;font-weight:600}
+.bubble::before{left:-8px;width:26px;height:26px;border-bottom-right-radius:20px}
+.meta{font-size:18px;margin:8px 0 0 22px;gap:14px}
+.msg .av{width:72px;height:72px;font-size:26px;margin-bottom:34px}
+.badge{width:48px;height:48px;font-size:28px;top:-16px;right:-16px}
+.bubble{margin-right:20px}
+.sys{font-size:18px}
+
+/* ---- dag-modus: hvit bakgrunn, gule bobler ---- */
+html:has(body.light),body.light{background:#fff;color:#000}
+body.light .target{background:transparent;border-color:transparent}
+body.light .target .lbl,body.light .target .to,body.light .target .txt,body.light .target .to b,body.light .target .timer{color:#000}
+body.light .bubble{background:var(--y);color:#000;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+body.light .msg.bad .bubble{box-shadow:inset 0 0 0 3px #e0001b,0 2px 10px rgba(0,0,0,.08)}
+body.light .msg.ok .bubble{box-shadow:inset 0 0 0 3px #000}
+body.light .msg.win .bubble{background:var(--y);color:#000;font-weight:700;box-shadow:inset 0 0 0 5px #000,0 8px 30px rgba(255,185,0,.55)}
+body.light .msg .who,body.light .meta,body.light .sys,body.light .empty,body.light .conn{color:#6e6e73}
+body.light .sys b,body.light .empty b{color:#000}
+body.light .tag.ok{color:#000}body.light .tag.bad{color:#c4001a}
+body.light .badge{border-color:#fff}
+body.light .badge.ok,body.light .msg.win .badge.ok{background:#000;color:var(--y);border-color:#fff}
+body.light .av.ph{box-shadow:0 0 0 3px var(--y)}
+body.light footer{border-top-color:#e5e5e5}
+body.light .btn{background:#f0f0f2;color:#000}body.light .btn:hover{background:#e4e4e8}
+body.light .btn.primary{background:var(--y);color:#000}body.light .btn.primary:hover{background:var(--dy)}
+body.light .round-btn{background:#f0f0f2}body.light .round-btn svg{stroke:#000}
+body.light .dot.err{background:#c4001a}
 </style>
 </head>
 <body>
 <div class="app">
-  <header>
-    <button class="round-btn left" id="btnFull" title="Fullskjerm">
-      <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
-    </button>
-    <div class="group-av">📱</div>
-    <div class="group-name"><span id="groupTitle">Dum-mobil</span><span class="chev">›</span></div>
-    <div class="sub" id="subline">SMS · 2 deltagere</div>
-    <button class="round-btn right" id="btnSettings" title="Innstillinger">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-    </button>
-  </header>
 
   <div class="target">
     <div class="lbl">Førstemann til å skrive</div>
@@ -166,6 +190,12 @@ textarea{resize:vertical;min-height:70px}
   <div class="chat" id="chat"></div>
 
   <footer>
+    <button class="round-btn" id="btnFull" title="Fullskjerm">
+      <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+    <button class="round-btn" id="btnSettings" title="Innstillinger">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
     <div class="conn"><span class="dot" id="dot"></span><span id="connTxt">Ikke tilkoblet</span><span id="hiddenTxt" style="margin-left:10px;opacity:.7"></span></div>
     <button class="btn" id="btnStart">Nedtelling</button>
     <button class="btn primary" id="btnReset">Nullstill (mellomrom)</button>
@@ -198,9 +228,10 @@ textarea{resize:vertical;min-height:70px}
     </div>
 
     <h3>Konkurranse</h3>
-    <div class="field"><label>Mottakerens navn (vises øverst og i overskriften)</label><input type="text" id="fTitle"></div>
+    <div class="field"><label>Mottakerens navn (vises i overskriften)</label><input type="text" id="fTitle"></div>
     <div class="field"><label>Setningen som skal skrives</label><textarea id="fSentence"></textarea></div>
     <label class="chk"><input type="checkbox" id="fSound"> Pling-lyd ved ny melding</label>
+    <label class="chk"><input type="checkbox" id="fLight"> ☀️ Dag-modus (hvit bakgrunn) – skru av for natt-modus</label>
     <p class="note">Meldingen må være helt lik setningen – store/små bokstaver, tegnsetting og mellomrom teller.</p>
 
     <h3>Deltagere</h3>
@@ -348,11 +379,24 @@ async function keepAwake() { try { if ('wakeLock' in navigator) { wl = await nav
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !document.querySelector('#unlock.show')) keepAwake(); });
 
 /* ---------------- render ---------------- */
+// Gjør setningen så stor som mulig, men alltid på én linje
+function fitHeadline() {
+  const el = $('#targetTxt'); if (!el) return;
+  el.style.fontSize = '200px';
+  const avail = el.clientWidth, need = el.scrollWidth;
+  if (need > 0 && avail > 0) el.style.fontSize = Math.min(200, Math.floor(200 * avail / need * 0.98)) + 'px';
+}
+addEventListener('resize', fitHeadline);
+addEventListener('orientationchange', () => setTimeout(fitHeadline, 300));
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitHeadline);
 function renderHeader() {
-  $('#groupTitle').textContent = cfg.title || 'Dum-mobil';
+  if ($('#groupTitle')) $('#groupTitle').textContent = cfg.title || 'Dum-mobil';
   $('#targetTxt').textContent = '«' + (cfg.sentence || '–') + '»';
   $('#toName').textContent = cfg.title || '–';
-  $('#subline').textContent = 'SMS · ' + cfg.players.map(p => p.name).join(', ');
+  document.body.classList.toggle('light', !!cfg.light);
+  const tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.content = cfg.light ? '#ffffff' : '#000000';
+  fitHeadline();
+  if ($('#subline')) $('#subline').textContent = 'SMS · ' + cfg.players.map(p => p.name).join(', ');
   document.title = (cfg.title || 'Dum-mobil') + ' – SMS-konkurranse';
 }
 function renderPlayers() {
@@ -417,7 +461,7 @@ function addMessage(from, text, id) {
       attempts[idx]++;
       if (correct) {
         if (firstOk[idx] == null) firstOk[idx] = ms;
-        if (!winner) { winner = { idx, ms, text }; state = 'win'; tag = '<span class="tag ok">🏆 FØRST MED RIKTIG!</span>'; }
+        if (!winner) { winner = { idx, ms, text }; state = 'win'; tag = '<span class="tag ok">🏆 FØRSTE MED RIKTIG SVAR!</span>'; }
         else { state = 'ok'; tag = '<span class="tag ok">✓ Riktig</span>'; }
       } else { state = 'bad'; tag = '<span class="tag bad">✗ Feil</span>'; }
     }
@@ -550,7 +594,7 @@ function connect() {
 function postUrl() { return (cfg.server || 'https://ntfy.sh').replace(/\/+$/, '') + '/' + cfg.topic; }
 function fillSettings() {
   $('#fTitle').value = cfg.title; $('#fSentence').value = cfg.sentence;
-  $('#fSound').checked = cfg.sound;
+  $('#fSound').checked = cfg.sound; $('#fLight').checked = !!cfg.light;
   $('#fTopic').value = cfg.topic; $('#fServer').value = cfg.server;
   $('#postUrl').textContent = postUrl();
   $('#pEdit').innerHTML = cfg.players.map((p, i) => `<div class="prow"><label class="photo-btn ${p.photo ? 'has' : ''}" title="Velg bilde" ${p.photo ? `style="background-image:url('${p.photo}')"` : ''}>Bilde<input type="file" accept="image/*" data-photo="${i}"></label>
@@ -563,7 +607,7 @@ function readSettings() {
   const oldTopic = cfg.topic, oldServer = cfg.server;
   cfg.title = $('#fTitle').value.trim() || 'Dum-mobil';
   cfg.sentence = $('#fSentence').value.trim();
-  cfg.sound = $('#fSound').checked;
+  cfg.sound = $('#fSound').checked; cfg.light = $('#fLight').checked;
   cfg.topic = $('#fTopic').value.trim().replace(/[^\w\-]/g, '');
   cfg.server = $('#fServer').value.trim() || 'https://ntfy.sh';
   document.querySelectorAll('#pEdit input[data-k]').forEach(inp => { cfg.players[+inp.dataset.i][inp.dataset.k] = inp.value.trim(); });
